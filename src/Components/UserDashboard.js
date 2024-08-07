@@ -7,40 +7,17 @@ import DeletePolicy from './DeletePolicy';
 import FileClaim from './FileClaim';
 import ClaimStatus from './ClaimsStatus';
 import GeneratePDF from './GeneratePDF'; // Import the GeneratePDF component
-
+import { useNavigate } from 'react-router-dom';
 const UserDashboard = () => {
   const [currentTab, setCurrentTab] = useState('profile');
-
+  const navigate = useNavigate();
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
   };
-  const handleLogout = async () => {
-    try {
-      // Fetch user data from the API
-      const response = await fetch(
-        'https://strapi-cms-backend-wtzq.onrender.com/api/users/me',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('jwt')}`, // Include the JWT token if required
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-
-      const userData = await response.json();
-      const username = userData.username;
-      const tokenKey = `jwt_${username}`;
-
-      // Remove the JWT token from localStorage
-      localStorage.removeItem(tokenKey);
-      window.location.href = '/login'; // Redirect to login page or home page
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    // Clear token or handle logout logic
+    localStorage.removeItem('jwt');
+    navigate('/login');
   };
 
   const renderContent = () => {
