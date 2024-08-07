@@ -4,9 +4,10 @@ import ConfirmClaim from './ConfirmClaim'; // Ensure this path is correct
 import BlockUser from './BlockUser'; // Ensure this path is correct
 import GeneratePDF from './GeneratePDF'; // Ensure this path is correct
 import Profile from './Profile';
+import { useNavigate } from 'react-router-dom';
 const AdminDashboard = () => {
   const [currentTab, setCurrentTab] = useState('adminProfile');
-
+  const navigate = useNavigate();
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
   };
@@ -14,7 +15,7 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     // Clear token or handle logout logic
     localStorage.removeItem('jwt');
-    window.location.href = '/login'; // Redirect to login page or home page
+    navigate('/login');
   };
 
   const renderContent = () => {
