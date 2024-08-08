@@ -51,19 +51,33 @@ const ClaimsStatus = () => {
   const fetchPolicies = async () => {
     try {
       const token = localStorage.getItem('jwt');
-      const response = await axios.get(
-        'https://strapi-cms-backend-wtzq.onrender.com/api/policies',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      let allPolicies = [];
+      let page = 1;
+      let hasMore = true;
 
-      setPolicies(response.data.data || []);
+      while (hasMore) {
+        const response = await axios.get(
+          `https://strapi-cms-backend-wtzq.onrender.com/api/policies?pagination[page]=${page}&pagination[pageSize]=100`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        allPolicies = [...allPolicies, ...(response.data.data || [])];
+        hasMore =
+          response.data.meta.pagination.page <
+          response.data.meta.pagination.pageCount;
+        page++;
+      }
+
+      setPolicies(allPolicies);
     } catch (error) {
       console.error('Error fetching policies:', error);
-      setError('Failed to fetch policies. Please try again.');
+      setError('Failed to fetch all policies. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,7 +108,7 @@ const ClaimsStatus = () => {
     return policy ? policy.attributes.name : 'Unknown Policy';
   };
 
-  if (isLoading || policies.length === 0) {
+  if (isLoading) {
     return (
       <Container>
         <CircularProgress />
