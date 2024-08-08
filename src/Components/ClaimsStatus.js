@@ -53,30 +53,42 @@ const ClaimsStatus = () => {
       const token = localStorage.getItem('jwt');
       let allPolicies = [];
       let page = 1;
-      let hasMore = true;
+      let hasMorePages = true;
 
-      while (hasMore) {
+      while (hasMorePages) {
         const response = await axios.get(
-          `https://strapi-cms-backend-wtzq.onrender.com/api/policies?pagination[page]=${page}&pagination[pageSize]=100`,
+          'https://strapi-cms-backend-wtzq.onrender.com/api/policies',
           {
             headers: {
               Authorization: `Bearer ${token}`,
+              Accept: 'application/json',
+            },
+            params: {
+              pagination: {
+                page: page,
+                pageSize: 100, // Adjust this value based on your API's maximum allowed page size
+              },
             },
           }
         );
 
-        allPolicies = [...allPolicies, ...(response.data.data || [])];
-        hasMore =
-          response.data.meta.pagination.page <
-          response.data.meta.pagination.pageCount;
-        page++;
+        allPolicies = [...allPolicies, ...response.data.data];
+
+        if (response.data.meta.pagination.pageCount > page) {
+          page++;
+        } else {
+          hasMorePages = false;
+        }
       }
 
       setPolicies(allPolicies);
-    } catch (error) {
-      console.error('Error fetching policies:', error);
-      setError('Failed to fetch all policies. Please try again.');
-    } finally {
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error fetching policies:', err);
+      setError(
+        err.response?.data?.error?.message ||
+          'An error occurred while fetching policies'
+      );
       setIsLoading(false);
     }
   };
