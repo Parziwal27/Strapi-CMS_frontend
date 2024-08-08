@@ -90,7 +90,7 @@ const ClaimsStatus = () => {
   });
 
   const getPolicyName = (policyId) => {
-    const policy = policies.find((p) => p.id == policyId);
+    const policy = policies.find((p) => p.id === parseInt(policyId));
     return policy ? policy.attributes.name : 'Unknown Policy';
   };
 
