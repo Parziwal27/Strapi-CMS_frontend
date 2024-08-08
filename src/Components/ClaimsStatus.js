@@ -94,7 +94,7 @@ const ClaimsStatus = () => {
     return policy ? policy.attributes.name : 'Unknown Policy';
   };
 
-  if (isLoading) {
+  if (isLoading || policies.length === 0) {
     return (
       <Container>
         <CircularProgress />
