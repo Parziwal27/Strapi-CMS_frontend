@@ -35,7 +35,7 @@ const theme = createTheme({
 const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState({ message: null, details: null });
+  const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -63,16 +63,13 @@ const Login = ({ onLoginSuccess }) => {
         onLoginSuccess(user);
       }
       navigate(user.isAdmin ? '/admin' : '/user');
-      setError({ message: null, details: null });
+      setError(null);
     } catch (err) {
       console.error('Login error:', err);
-      setError({
-        message:
-          err.response?.data?.error?.message ||
-          'An error occurred during login',
-        details: err.response?.data?.error?.details || err.message,
-      });
-      setTimeout(() => setError({ message: null, details: null }), 5000); // Increased timeout for readability
+      setError(
+        err.response?.data?.error?.message || 'An error occurred during login'
+      );
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -167,14 +164,9 @@ const Login = ({ onLoginSuccess }) => {
                 sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem' }}>
                 Login
               </Button>
-              {(error.message || error.details) && (
+              {error && (
                 <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-                  <Typography variant="body1">{error.message}</Typography>
-                  {error.details && (
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      Details: {error.details}
-                    </Typography>
-                  )}
+                  {error}
                 </Alert>
               )}
               <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
