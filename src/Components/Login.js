@@ -35,12 +35,30 @@ const theme = createTheme({
 const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({ username: false, password: false });
+  const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    // Reset errors
+    setErrors({ username: false, password: false });
+    setErrorMessage('');
+
+    // Check for empty fields
+    const newErrors = {
+      username: username.trim() === '',
+      password: password.trim() === '',
+    };
+
+    if (newErrors.username || newErrors.password) {
+      setErrors(newErrors);
+      setErrorMessage('Please fill in all required fields.');
+      return;
+    }
+
     try {
       const response = await axios.post(
         'https://strapi-cms-backend-wtzq.onrender.com/api/auth/local',
@@ -63,13 +81,11 @@ const Login = ({ onLoginSuccess }) => {
         onLoginSuccess(user);
       }
       navigate(user.isAdmin ? '/admin' : '/user');
-      setError(null);
     } catch (err) {
       console.error('Login error:', err);
-      setError(
+      setErrorMessage(
         err.response?.data?.error?.message || 'An error occurred during login'
       );
-      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -121,6 +137,8 @@ const Login = ({ onLoginSuccess }) => {
                 autoFocus
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                error={errors.username}
+                helperText={errors.username ? 'Username is required' : ''}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -140,6 +158,8 @@ const Login = ({ onLoginSuccess }) => {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                error={errors.password}
+                helperText={errors.password ? 'Password is required' : ''}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -164,9 +184,9 @@ const Login = ({ onLoginSuccess }) => {
                 sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem' }}>
                 Login
               </Button>
-              {error && (
+              {errorMessage && (
                 <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-                  {error}
+                  {errorMessage}
                 </Alert>
               )}
               <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
