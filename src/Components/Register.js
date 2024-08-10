@@ -76,9 +76,9 @@ const Register = () => {
     // Additional age validation
     if (formData.age.trim()) {
       const age = parseInt(formData.age, 10);
-      if (isNaN(age) || age < 28 || age > 100) {
+      if (isNaN(age) || age < 18 || age > 100) {
         newErrors.age = true;
-        setErrorMessage('Age must be between 28 and 100');
+        setErrorMessage('Age must be between 18 and 100');
       }
     }
 
@@ -239,7 +239,7 @@ const Register = () => {
                 required
                 fullWidth
                 name="age"
-                label="Age (28-100)"
+                label="Age (18-100)"
                 type="number"
                 id="age"
                 value={formData.age}
@@ -247,7 +247,7 @@ const Register = () => {
                 error={errors.age}
                 helperText={
                   errors.age
-                    ? 'Age is required and must be between 28 and 100'
+                    ? 'Age is required and must be between 18 and 100'
                     : ''
                 }
                 inputProps={{ min: 18, max: 100 }}
