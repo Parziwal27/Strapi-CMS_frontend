@@ -250,7 +250,7 @@ const Register = () => {
                     ? 'Age is required and must be between 28 and 100'
                     : ''
                 }
-                inputProps={{ min: 28, max: 100 }}
+                inputProps={{ min: 18, max: 100 }}
               />
               <Button
                 type="submit"
