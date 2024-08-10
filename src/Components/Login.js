@@ -83,9 +83,14 @@ const Login = ({ onLoginSuccess }) => {
       navigate(user.isAdmin ? '/admin' : '/user');
     } catch (err) {
       console.error('Login error:', err);
-      setErrorMessage(
-        err.response?.data?.error?.message || 'An error occurred during login'
-      );
+      if (err.response && err.response.data && err.response.data.error) {
+        // Handle the specific error structure from the API
+        setErrorMessage(err.response.data.error.message);
+      } else {
+        setErrorMessage('An error occurred during login. Please try again.');
+      }
+      // Highlight both fields as potentially incorrect
+      setErrors({ username: true, password: true });
     }
   };
 
@@ -136,7 +141,10 @@ const Login = ({ onLoginSuccess }) => {
                 autoComplete="username"
                 autoFocus
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setErrors((prev) => ({ ...prev, username: false }));
+                }}
                 error={errors.username}
                 helperText={errors.username ? 'Username is required' : ''}
                 InputProps={{
@@ -157,7 +165,10 @@ const Login = ({ onLoginSuccess }) => {
                 id="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrors((prev) => ({ ...prev, password: false }));
+                }}
                 error={errors.password}
                 helperText={errors.password ? 'Password is required' : ''}
                 InputProps={{
