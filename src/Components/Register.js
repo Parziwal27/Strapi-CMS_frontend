@@ -41,11 +41,12 @@ const Register = () => {
     age: '',
   });
   const [errors, setErrors] = useState({
-    username: '',
-    email: '',
-    password: '',
-    age: '',
+    username: false,
+    email: false,
+    password: false,
+    age: false,
   });
+  const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -58,56 +59,38 @@ const Register = () => {
     // Clear the error for the field being changed
     setErrors((prevErrors) => ({
       ...prevErrors,
-      [name]: '',
+      [name]: false,
     }));
   };
 
   const validateForm = () => {
-    let isValid = true;
     const newErrors = {
-      username: '',
-      email: '',
-      password: '',
-      age: '',
+      username: !formData.username.trim(),
+      email: !formData.email.trim(),
+      password: !formData.password.trim(),
+      age: !formData.age.trim(),
     };
 
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-      isValid = false;
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-      isValid = false;
-    }
-
-    if (!formData.password.trim()) {
-      newErrors.password = 'Password is required';
-      isValid = false;
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters long';
-      isValid = false;
-    }
-
-    const age = parseInt(formData.age, 10);
-    if (!formData.age.trim()) {
-      newErrors.age = 'Age is required';
-      isValid = false;
-    } else if (isNaN(age) || age < 28 || age > 100) {
-      newErrors.age = 'Age must be between 28 and 100';
-      isValid = false;
-    }
-
     setErrors(newErrors);
-    return isValid;
+
+    // Additional age validation
+    if (formData.age.trim()) {
+      const age = parseInt(formData.age, 10);
+      if (isNaN(age) || age < 28 || age > 100) {
+        newErrors.age = true;
+        setErrorMessage('Age must be between 28 and 100');
+      }
+    }
+
+    return !Object.values(newErrors).some(Boolean);
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
+
     if (!validateForm()) {
+      setErrorMessage('Please fill in all required fields correctly.');
       return;
     }
 
@@ -136,13 +119,10 @@ const Register = () => {
       navigate('/login');
     } catch (err) {
       console.error('Registration error:', err);
-      const errorMessage =
+      setErrorMessage(
         err.response?.data?.error?.message ||
-        'An error occurred during registration';
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        general: errorMessage,
-      }));
+          'An error occurred during registration'
+      );
     }
   };
 
@@ -194,8 +174,8 @@ const Register = () => {
                 autoFocus
                 value={formData.username}
                 onChange={handleChange}
-                error={!!errors.username}
-                helperText={errors.username}
+                error={errors.username}
+                helperText={errors.username ? 'Username is required' : ''}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -214,8 +194,8 @@ const Register = () => {
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
-                error={!!errors.email}
-                helperText={errors.email}
+                error={errors.email}
+                helperText={errors.email ? 'Email is required' : ''}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -235,8 +215,8 @@ const Register = () => {
                 autoComplete="new-password"
                 value={formData.password}
                 onChange={handleChange}
-                error={!!errors.password}
-                helperText={errors.password}
+                error={errors.password}
+                helperText={errors.password ? 'Password is required' : ''}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -264,8 +244,12 @@ const Register = () => {
                 id="age"
                 value={formData.age}
                 onChange={handleChange}
-                error={!!errors.age}
-                helperText={errors.age}
+                error={errors.age}
+                helperText={
+                  errors.age
+                    ? 'Age is required and must be between 28 and 100'
+                    : ''
+                }
                 inputProps={{ min: 28, max: 100 }}
               />
               <Button
@@ -275,9 +259,9 @@ const Register = () => {
                 sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem' }}>
                 Register
               </Button>
-              {errors.general && (
+              {errorMessage && (
                 <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-                  {errors.general}
+                  {errorMessage}
                 </Alert>
               )}
               <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
