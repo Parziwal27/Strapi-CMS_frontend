@@ -13,6 +13,7 @@ import {
   Avatar,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
@@ -38,6 +39,7 @@ const Login = ({ onLoginSuccess }) => {
   const [errors, setErrors] = useState({ username: false, password: false });
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -58,6 +60,8 @@ const Login = ({ onLoginSuccess }) => {
       setErrorMessage('Please fill in all required fields.');
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const response = await axios.post(
@@ -84,13 +88,13 @@ const Login = ({ onLoginSuccess }) => {
     } catch (err) {
       console.error('Login error:', err);
       if (err.response && err.response.data && err.response.data.error) {
-        // Handle the specific error structure from the API
         setErrorMessage(err.response.data.error.message);
       } else {
         setErrorMessage('An error occurred during login. Please try again.');
       }
-      // Highlight both fields as potentially incorrect
       setErrors({ username: true, password: true });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -154,6 +158,7 @@ const Login = ({ onLoginSuccess }) => {
                     </InputAdornment>
                   ),
                 }}
+                disabled={isLoading}
               />
               <TextField
                 margin="normal"
@@ -177,7 +182,8 @@ const Login = ({ onLoginSuccess }) => {
                       <IconButton
                         aria-label="toggle password visibility"
                         onClick={() => setShowPassword(!showPassword)}
-                        edge="end">
+                        edge="end"
+                        disabled={isLoading}>
                         {showPassword ? (
                           <VisibilityOffIcon />
                         ) : (
@@ -187,13 +193,19 @@ const Login = ({ onLoginSuccess }) => {
                     </InputAdornment>
                   ),
                 }}
+                disabled={isLoading}
               />
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem' }}>
-                Login
+                sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem' }}
+                disabled={isLoading}>
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Login'
+                )}
               </Button>
               {errorMessage && (
                 <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
