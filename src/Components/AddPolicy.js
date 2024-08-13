@@ -14,7 +14,6 @@ const CategoryBox = ({ category, onClick }) => (
     sx={{
       p: 3,
       m: 2,
-      width: 'calc(40% - 24px)',
       cursor: 'pointer',
       textAlign: 'center',
       '&:hover': {

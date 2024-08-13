@@ -11,7 +11,7 @@ import {
   CardActionArea,
 } from '@mui/material';
 
-const Profile = () => {
+const Profile = ({ onTabChange, onPolicySelect }) => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +20,11 @@ const Profile = () => {
     const fetchProfileData = async () => {
       try {
         const token = localStorage.getItem('jwt');
+        console.log('Fetched JWT:', token); // Debugging log
+        if (!token) {
+          throw new Error('No JWT found, redirecting to login.');
+        }
+
         const response = await axios.get(
           'https://strapi-cms-backend-wtzq.onrender.com/api/users/me',
           {
@@ -40,6 +45,12 @@ const Profile = () => {
     fetchProfileData();
   }, []);
 
+  const handlePolicyClick = (policy) => {
+    console.log('Policy clicked:', policy);
+    onPolicySelect(policy);
+    onTabChange('applyClaim');
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -50,7 +61,9 @@ const Profile = () => {
 
   return (
     <Box sx={{ mt: 2, textAlign: 'left', width: '100%' }}>
-      <Typography variant="h5" gutterBottom></Typography>
+      <Typography variant="h5" gutterBottom>
+        Profile
+      </Typography>
       <Typography>
         <strong>Username:</strong> {profileData.username}
       </Typography>
@@ -65,9 +78,9 @@ const Profile = () => {
       </Typography>
       <Box
         sx={{
-          maxHeight: 180, // Set a fixed height for the policies section
-          overflowY: 'auto', // Enable vertical scrolling
-          paddingRight: 2, // Optional: Add padding for better aesthetics
+          maxHeight: 180,
+          overflowY: 'auto',
+          paddingRight: 2,
         }}>
         <Grid container spacing={3}>
           {profileData.policies && profileData.policies.length > 0 ? (
@@ -76,14 +89,14 @@ const Profile = () => {
                 <Card
                   sx={{
                     maxWidth: 345,
-                    backgroundColor: '#A1D9FF', // Light blue
+                    backgroundColor: '#A1D9FF',
                     '&:hover': {
-                      backgroundColor: '#0d47a1', // Dark blue
-                      color: 'white', // Optional: Change text color on hover
+                      backgroundColor: '#0d47a1',
+                      color: 'white',
                       boxShadow: 6,
                     },
                   }}>
-                  <CardActionArea>
+                  <CardActionArea onClick={() => handlePolicyClick(policy)}>
                     <CardContent>
                       <Typography variant="h6" component="div">
                         {policy.policy_name}

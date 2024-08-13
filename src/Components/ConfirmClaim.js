@@ -6,6 +6,7 @@ import {
   Paper,
   Button,
   Grid,
+  Alert,
 } from '@mui/material';
 import axios from 'axios';
 import CheckIcon from '@mui/icons-material/Check';
@@ -15,7 +16,9 @@ import { styled } from '@mui/system';
 const ConfirmClaim = () => {
   const [claims, setClaims] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingClaims, setLoadingClaims] = useState({});
   const [error, setError] = useState(null);
+  const [alert, setAlert] = useState(null);
 
   useEffect(() => {
     fetchClaims();
@@ -61,6 +64,7 @@ const ConfirmClaim = () => {
   };
 
   const updateClaimStatus = async (claimId, newStatus) => {
+    setLoadingClaims((prev) => ({ ...prev, [claimId]: true }));
     try {
       const token = localStorage.getItem('jwt');
       if (!token) {
@@ -82,20 +86,8 @@ const ConfirmClaim = () => {
       console.log('Claim response:', claimResponse.data);
       const claim = claimResponse.data.data;
 
-      console.log('Updating claim status...');
-      await axios.put(
-        `https://strapi-cms-backend-wtzq.onrender.com/api/claims/${claimId}`,
-        { data: { status: newStatus } },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-          },
-        }
-      );
-
       if (newStatus === 'approved') {
-        console.log('Claim approved. Fetching user details...');
+        console.log('Claim approval requested. Fetching user details...');
         const userResponse = await axios.get(
           `https://strapi-cms-backend-wtzq.onrender.com/api/users?filters[username]=${claim.attributes.policyholder_id}`,
           {
@@ -113,27 +105,51 @@ const ConfirmClaim = () => {
           throw new Error('User data not found');
         }
 
-        const user = users[0]; // Assume the first user is the one we want
+        const user = users[0];
 
         if (!Array.isArray(user.policies)) {
           console.error('Unexpected policies format:', user.policies);
           throw new Error('User policies not found or in unexpected format');
         }
 
+        const policy = user.policies.find(
+          (p) => p.policy_id === parseInt(claim.attributes.policy_id)
+        );
+
+        if (!policy) {
+          throw new Error('Matching policy not found');
+        }
+
+        const claimAmount = parseFloat(claim.attributes.amount);
+        if (claimAmount > policy.left_amount) {
+          setAlert(
+            `Claim amount ($${claimAmount}) exceeds the remaining balance ($${policy.left_amount}). Claim cannot be approved.`
+          );
+          return;
+        }
+
+        // If we've passed the check, proceed with updating the claim status
+        console.log('Updating claim status...');
+        await axios.put(
+          `https://strapi-cms-backend-wtzq.onrender.com/api/claims/${claimId}`,
+          { data: { status: newStatus } },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/json',
+            },
+          }
+        );
+
         console.log('Updating policy left_amount...');
-        const updatedPolicies = user.policies.map((policy) => {
-          console.log('Checking policy:', policy);
-          if (policy.policy_id === parseInt(claim.attributes.policy_id)) {
-            console.log('Matching policy found. Updating left_amount...');
+        const updatedPolicies = user.policies.map((p) => {
+          if (p.policy_id === parseInt(claim.attributes.policy_id)) {
             return {
-              ...policy,
-              left_amount: Math.max(
-                0,
-                policy.left_amount - parseFloat(claim.attributes.amount)
-              ),
+              ...p,
+              left_amount: Math.max(0, p.left_amount - claimAmount),
             };
           }
-          return policy;
+          return p;
         });
 
         console.log('Updated policies:', updatedPolicies);
@@ -149,16 +165,30 @@ const ConfirmClaim = () => {
             },
           }
         );
+      } else {
+        // If the status is not 'approved', just update the claim status
+        console.log('Updating claim status...');
+        await axios.put(
+          `https://strapi-cms-backend-wtzq.onrender.com/api/claims/${claimId}`,
+          { data: { status: newStatus } },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/json',
+            },
+          }
+        );
       }
 
       console.log('Fetching updated claims...');
-      fetchClaims();
+      await fetchClaims();
     } catch (error) {
       console.error('Error in updateClaimStatus:', error);
       setError(`Failed to update claim: ${error.message}`);
+    } finally {
+      setLoadingClaims((prev) => ({ ...prev, [claimId]: false }));
     }
   };
-
   if (isLoading) return <CircularProgress />;
   if (error) return <Typography color="error">{error}</Typography>;
 
@@ -167,6 +197,12 @@ const ConfirmClaim = () => {
       <Typography variant="h4" mb={3}>
         Confirm Claims
       </Typography>
+      {alert && (
+        <Alert severity="warning" onClose={() => setAlert(null)} sx={{ mb: 2 }}>
+          {alert}
+        </Alert>
+      )}
+
       {claims.length === 0 ? (
         <Typography>No claims found.</Typography>
       ) : (

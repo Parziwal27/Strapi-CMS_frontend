@@ -7,10 +7,11 @@ import {
   Button,
   Container,
   TextField,
+  Grid,
 } from '@mui/material';
 import axios from 'axios';
 
-const FileClaim = () => {
+const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
   const [userPolicies, setUserPolicies] = useState([]);
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [amount, setAmount] = useState('');
@@ -18,8 +19,17 @@ const FileClaim = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Reset selected policy and fetch user policies when component mounts
+    setSelectedPolicy(null);
     fetchUserPolicies();
   }, []);
+
+  useEffect(() => {
+    // Update selected policy only if initialSelectedPolicy changes
+    if (initialSelectedPolicy) {
+      setSelectedPolicy(initialSelectedPolicy);
+    }
+  }, [initialSelectedPolicy]);
 
   const fetchUserPolicies = async () => {
     const token = localStorage.getItem('jwt');
@@ -50,7 +60,7 @@ const FileClaim = () => {
       return;
     }
 
-    if (amount > selectedPolicy.left_amount) {
+    if (parseFloat(amount) > parseFloat(selectedPolicy.left_amount)) {
       setError(
         `Amount cannot be greater than the left amount (${selectedPolicy.left_amount}).`
       );
@@ -108,11 +118,9 @@ const FileClaim = () => {
   };
 
   const handleGoBack = () => {
-    if (selectedPolicy) {
-      setSelectedPolicy(null);
-      setAmount('');
-      setError(null);
-    }
+    setSelectedPolicy(null);
+    setAmount('');
+    setError(null);
   };
 
   if (isLoading) {
@@ -135,34 +143,34 @@ const FileClaim = () => {
   return (
     <Container maxWidth="md">
       <Typography variant="h4" gutterBottom>
-        Choose
+        {selectedPolicy ? 'File Claim' : 'Choose Policy'}
       </Typography>
       {userPolicies.length === 0 ? (
         <Typography>No policies found. Please add a policy first.</Typography>
       ) : !selectedPolicy ? (
-        <Box
-          display="flex"
-          flexWrap="wrap"
-          justifyContent="center"
-          sx={{
-            maxHeight: 250,
-            overflowY: 'auto',
-            paddingRight: 2,
-          }}>
+        <Grid container spacing={2}>
           {userPolicies.map((policy, index) => (
-            <Paper
-              key={index}
-              elevation={3}
-              sx={{ p: 2, m: 1, cursor: 'pointer', textAlign: 'center' }}
-              onClick={() => setSelectedPolicy(policy)}>
-              <Typography variant="h6">{policy.policy_name}</Typography>
-              <Typography>Sum Assured: {policy.sum_assured}</Typography>
-              <Typography>Left Amount: {policy.left_amount}</Typography>
-              <Typography>Premium: {policy.premium}</Typography>
-              <Typography>Duration: {policy.duration}</Typography>
-            </Paper>
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 2,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  '&:hover': {
+                    backgroundColor: '#f5f5f5',
+                  },
+                }}
+                onClick={() => setSelectedPolicy(policy)}>
+                <Typography variant="h6">{policy.policy_name}</Typography>
+                <Typography>Sum Assured: {policy.sum_assured}</Typography>
+                <Typography>Left Amount: {policy.left_amount}</Typography>
+                <Typography>Premium: {policy.premium}</Typography>
+                <Typography>Duration: {policy.duration}</Typography>
+              </Paper>
+            </Grid>
           ))}
-        </Box>
+        </Grid>
       ) : (
         <Box>
           <Button onClick={handleGoBack} sx={{ mb: 2 }}>
