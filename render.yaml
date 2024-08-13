@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: your-app-name
+    name: strapi-cms-frontend
     env: static
     buildCommand: npm run build
     staticPublishPath: ./build
