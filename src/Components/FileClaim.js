@@ -155,7 +155,7 @@ const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
                 elevation={3}
                 sx={{
                   p: 2,
-                  cursor: 'pointer',
+                  cursor: 'default',
                   textAlign: 'center',
                   '&:hover': {
                     backgroundColor: '#f5f5f5',

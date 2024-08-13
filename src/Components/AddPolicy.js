@@ -14,7 +14,7 @@ const CategoryBox = ({ category, onClick }) => (
     sx={{
       p: 3,
       m: 2,
-      cursor: 'pointer',
+      cursor: 'default',
       textAlign: 'center',
       '&:hover': {
         backgroundColor: '#e0e0e0',
@@ -28,7 +28,7 @@ const CategoryBox = ({ category, onClick }) => (
 const PolicyBox = ({ policy, onClick }) => (
   <Paper
     elevation={3}
-    sx={{ p: 2, m: 1, cursor: 'pointer', textAlign: 'center' }}
+    sx={{ p: 2, m: 1, cursor: 'default', textAlign: 'center' }}
     onClick={() => onClick(policy.id)}>
     <Typography variant="h6">{policy.name}</Typography>
     <Typography>Sum Assured: {policy.sum_assured}</Typography>
@@ -38,7 +38,7 @@ const PolicyBox = ({ policy, onClick }) => (
 const PremiumPlanBox = ({ plan, onClick }) => (
   <Paper
     elevation={3}
-    sx={{ p: 2, m: 1, cursor: 'pointer', textAlign: 'center' }}
+    sx={{ p: 2, m: 1, cursor: 'default', textAlign: 'center' }}
     onClick={() => onClick(plan)}>
     <Typography variant="h6">{plan.duration}</Typography>
     <Typography>Premium: {plan.premium}</Typography>

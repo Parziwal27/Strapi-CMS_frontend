@@ -102,7 +102,7 @@ const DeletePolicy = () => {
   const PolicyBox = ({ policy, onClick }) => (
     <Paper
       elevation={3}
-      sx={{ p: 2, m: 1, cursor: 'pointer', textAlign: 'center' }}
+      sx={{ p: 2, m: 1, cursor: 'default', textAlign: 'center' }}
       onClick={() => onClick(policy)}>
       <Typography variant="h6">{policy.policy_name}</Typography>
       <Typography>Sum Assured: {policy.sum_assured}</Typography>

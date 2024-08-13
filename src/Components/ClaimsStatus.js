@@ -161,7 +161,7 @@ const ClaimsStatus = () => {
               sx={{
                 p: 2,
                 m: 1,
-                cursor: 'pointer',
+                cursor: 'default',
                 textAlign: 'center',
                 transition: 'background-color 0.3s, transform 0.3s',
                 '&:hover': {
