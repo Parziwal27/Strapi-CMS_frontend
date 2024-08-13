@@ -10,7 +10,6 @@ import UserDashboard from './Components/UserDashboard';
 import AdminDashboard from './Components/AdminDashboard';
 import Register from './Components/Register';
 import RegisterSuccess from './Components/RegistrationSuccess';
-import FileClaim from './Components/FileClaim';
 
 const App = () => {
   const isAuthenticated = () => {
@@ -25,17 +24,13 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/registration-success" element={<RegisterSuccess />} />
         <Route
-          path="/user"
+          path="/user/*"
           element={
             isAuthenticated() ? <UserDashboard /> : <Navigate to="/login" />
           }
         />
         <Route
-          path="/user/apply-claim"
-          element={isAuthenticated() ? <FileClaim /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/admin"
+          path="/admin/*"
           element={
             isAuthenticated() ? <AdminDashboard /> : <Navigate to="/login" />
           }
