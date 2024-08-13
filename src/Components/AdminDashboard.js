@@ -1,17 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Tabs, Tab, Button, Grid } from '@mui/material';
 import ConfirmClaim from './ConfirmClaim'; // Ensure this path is correct
 import BlockUser from './BlockUser'; // Ensure this path is correct
 import GeneratePDF from './GeneratePDF'; // Ensure this path is correct
 import Profile from './Profile';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 const AdminDashboard = () => {
   const [currentTab, setCurrentTab] = useState('adminProfile');
   const navigate = useNavigate();
+  const location = useLocation();
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
   };
-
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab) {
+      setCurrentTab(tab);
+    }
+  }, [location]);
   const handleLogout = () => {
     // Clear token or handle logout logic
     localStorage.removeItem('jwt');

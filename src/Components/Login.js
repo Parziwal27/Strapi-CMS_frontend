@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+
 import axios from 'axios';
 import {
   TextField,
@@ -36,6 +38,7 @@ const theme = createTheme({
 const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const location = useLocation();
   const [errors, setErrors] = useState({ username: false, password: false });
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);

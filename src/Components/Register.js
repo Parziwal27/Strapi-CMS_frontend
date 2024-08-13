@@ -116,7 +116,9 @@ const Register = () => {
       );
 
       console.log('Registration successful:', response.data);
-      navigate('/login');
+      navigate('/login', {
+        state: { message: 'Registration successful. Please log in.' },
+      });
     } catch (err) {
       console.error('Registration error:', err);
       setErrorMessage(
