@@ -70,18 +70,47 @@ const GeneratePDF = () => {
   };
 
   const fetchPolicies = async () => {
-    const token = localStorage.getItem('jwt');
     try {
-      const response = await axios.get(
-        'https://strapi-cms-backend-wtzq.onrender.com/api/policies',
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      const token = localStorage.getItem('jwt');
+      let allPolicies = [];
+      let page = 1;
+      let hasMorePages = true;
+
+      while (hasMorePages) {
+        const response = await axios.get(
+          'https://strapi-cms-backend-wtzq.onrender.com/api/policies',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/json',
+            },
+            params: {
+              pagination: {
+                page: page,
+                pageSize: 100, // Adjust this value based on your API's maximum allowed page size
+              },
+            },
+          }
+        );
+
+        allPolicies = [...allPolicies, ...response.data.data];
+
+        if (response.data.meta.pagination.pageCount > page) {
+          page++;
+        } else {
+          hasMorePages = false;
         }
+      }
+
+      setAllPolicies(allPolicies);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error fetching policies:', err);
+      setError(
+        err.response?.data?.error?.message ||
+          'An error occurred while fetching policies'
       );
-      setAllPolicies(response.data.data || []);
-    } catch (error) {
-      console.error('Error fetching policies:', error);
-      setError('Failed to fetch policies. Please try again.');
+      setIsLoading(false);
     }
   };
 
