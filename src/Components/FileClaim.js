@@ -8,6 +8,7 @@ import {
   Container,
   TextField,
   Grid,
+  Alert,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -19,13 +20,11 @@ const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Reset selected policy and fetch user policies when component mounts
     setSelectedPolicy(null);
     fetchUserPolicies();
   }, []);
 
   useEffect(() => {
-    // Update selected policy only if initialSelectedPolicy changes
     if (initialSelectedPolicy) {
       setSelectedPolicy(initialSelectedPolicy);
     }
@@ -60,7 +59,13 @@ const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
       return;
     }
 
-    if (parseFloat(amount) > parseFloat(selectedPolicy.left_amount)) {
+    const claimAmount = parseFloat(amount);
+    if (isNaN(claimAmount) || claimAmount <= 0) {
+      setError('Please enter a valid positive amount.');
+      return;
+    }
+
+    if (claimAmount > parseFloat(selectedPolicy.left_amount)) {
       setError(
         `Amount cannot be greater than the left amount (${selectedPolicy.left_amount}).`
       );
@@ -86,7 +91,7 @@ const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
           data: {
             policyholder_id: username,
             policy_id: String(selectedPolicy.policy_id),
-            amount: parseFloat(amount),
+            amount: claimAmount,
             status: 'pending',
           },
         },
@@ -100,6 +105,7 @@ const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
       alert('Claim filed successfully!');
       setSelectedPolicy(null);
       setAmount('');
+      setError(null);
     } catch (error) {
       console.error('Error filing claim:', error);
       console.error('Error response:', error.response);
@@ -132,19 +138,16 @@ const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
     );
   }
 
-  if (error) {
-    return (
-      <Container>
-        <Typography color="error">{error}</Typography>
-      </Container>
-    );
-  }
-
   return (
     <Container maxWidth="md">
       <Typography variant="h4" gutterBottom>
         {selectedPolicy ? 'File Claim' : 'Choose Policy'}
       </Typography>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
       {userPolicies.length === 0 ? (
         <Typography>No policies found. Please add a policy first.</Typography>
       ) : !selectedPolicy ? (
@@ -188,15 +191,22 @@ const FileClaim = ({ selectedPolicy: initialSelectedPolicy }) => {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              inputProps={{ min: 0 }}
               fullWidth
               sx={{ mb: 2 }}
             />
             <Button
               variant="contained"
               color="primary"
-              onClick={handleFileClaim}>
+              onClick={handleFileClaim}
+              sx={{ mr: 2 }}>
               Submit Claim
             </Button>
+            {error && (
+              <Button variant="outlined" onClick={handleGoBack}>
+                Go Back
+              </Button>
+            )}
           </Box>
         </Box>
       )}
