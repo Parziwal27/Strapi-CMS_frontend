@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
-import { Button, CircularProgress, Typography, Container } from '@mui/material';
-import axios, { all } from 'axios';
+import {
+  Button,
+  CircularProgress,
+  Typography,
+  Container,
+  Snackbar,
+} from '@mui/material';
+import axios from 'axios';
 
 const GeneratePDF = () => {
   const [userData, setUserData] = useState(null);
   const [claims, setClaims] = useState([]);
   const [userPolicies, setUserPolicies] = useState([]);
   const [allPolicies, setAllPolicies] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
     fetchUserData();
@@ -35,12 +42,6 @@ const GeneratePDF = () => {
       setUserData(response.data);
       const policies = response.data.policies || [];
       setUserPolicies(policies);
-      const uniqueCategories = [
-        ...new Set(policies.map((policy) => policy.category)),
-      ];
-      setCategories(
-        uniqueCategories.filter((category) => category !== undefined)
-      );
     } catch (error) {
       console.error('Error fetching user data:', error);
       setError('Failed to fetch user data. Please try again.');
@@ -87,7 +88,7 @@ const GeneratePDF = () => {
             params: {
               pagination: {
                 page: page,
-                pageSize: 100, // Adjust this value based on your API's maximum allowed page size
+                pageSize: 100,
               },
             },
           }
@@ -103,26 +104,28 @@ const GeneratePDF = () => {
       }
 
       setAllPolicies(allPolicies);
-      setIsLoading(false);
     } catch (err) {
       console.error('Error fetching policies:', err);
       setError(
         err.response?.data?.error?.message ||
           'An error occurred while fetching policies'
       );
+    } finally {
       setIsLoading(false);
     }
   };
 
   const getPolicyName = (policyId) => {
-    console.log(allPolicies);
-    console.log(policyId, typeof policyId);
     const policy = allPolicies.find((p) => p.id === parseInt(policyId));
     return policy ? policy.attributes.name : 'Unknown Policy';
   };
 
   const generatePDF = () => {
-    if (!userData || claims.length === 0 || userPolicies.length === 0) return;
+    if (!userData) {
+      setSnackbarMessage('User data is not available. Please try again.');
+      setSnackbarOpen(true);
+      return;
+    }
 
     const doc = new jsPDF();
     let yOffset = 20;
@@ -132,7 +135,6 @@ const GeneratePDF = () => {
       doc.text(text, 20 + indent, yOffset);
       yOffset += fontSize / 2 + 5;
       if (yOffset > 270) {
-        // If the content is too long, add a new page
         doc.addPage();
         yOffset = 20;
       }
@@ -153,7 +155,7 @@ const GeneratePDF = () => {
     doc.text('Claims Management System', 105, yOffset, { align: 'center' });
     yOffset += 20;
 
-    // Profile Section
+    // Profile Section (Always included)
     addSection('User Profile');
     addText(`Username: ${userData.username}`);
     addText(`Email: ${userData.email}`);
@@ -164,55 +166,62 @@ const GeneratePDF = () => {
 
     // Policies Section
     addSection('Current Policies');
-    userPolicies.forEach((policy, index) => {
-      addText(`Policy ${index + 1}: ${policy.policy_name}`, 14);
-      addText(`Sum Assured: ${policy.sum_assured}`, 12, 10);
-      addText(`Premium: ${policy.premium}`, 12, 10);
-      addText(`Duration: ${policy.duration}`, 12, 10);
-    });
+    if (userPolicies.length === 0) {
+      addText('No policies found for this user.');
+    } else {
+      userPolicies.forEach((policy, index) => {
+        addText(`Policy ${index + 1}: ${policy.policy_name}`, 14);
+        addText(`Sum Assured: ${policy.sum_assured}`, 12, 10);
+        addText(`Premium: ${policy.premium}`, 12, 10);
+        addText(`Duration: ${policy.duration}`, 12, 10);
+      });
+    }
+    yOffset += 10;
 
     // Claims Section
     addSection('Claims');
     const filteredClaims = claims.filter(
       (claim) => claim.attributes.policyholder_id === userData.username
     );
-    const sortedClaims = filteredClaims.sort((a, b) => {
-      if (
-        a.attributes.status === 'pending' &&
-        b.attributes.status !== 'pending'
-      )
-        return -1;
-      if (
-        a.attributes.status !== 'pending' &&
-        b.attributes.status === 'pending'
-      )
-        return 1;
-      if (
-        a.attributes.status === 'approved' &&
-        b.attributes.status !== 'approved'
-      )
-        return -1;
-      if (
-        a.attributes.status !== 'approved' &&
-        b.attributes.status === 'approved'
-      )
-        return 1;
-      return 0;
-    });
+    if (filteredClaims.length === 0) {
+      addText('No claims found for this user.');
+    } else {
+      const sortedClaims = filteredClaims.sort((a, b) => {
+        if (
+          a.attributes.status === 'pending' &&
+          b.attributes.status !== 'pending'
+        )
+          return -1;
+        if (
+          a.attributes.status !== 'pending' &&
+          b.attributes.status === 'pending'
+        )
+          return 1;
+        if (
+          a.attributes.status === 'approved' &&
+          b.attributes.status !== 'approved'
+        )
+          return -1;
+        if (
+          a.attributes.status !== 'approved' &&
+          b.attributes.status === 'approved'
+        )
+          return 1;
+        return 0;
+      });
 
-    sortedClaims.forEach((claim, index) => {
-      addText(`Claim ${index + 1}:`, 14);
-      addText(`Policy: ${getPolicyName(claim.attributes.policy_id)}`, 12, 10);
-      addText(`Amount: ${claim.attributes.amount}`, 12, 10);
-      addText(`Status: ${claim.attributes.status}`, 12, 10);
-    });
+      sortedClaims.forEach((claim, index) => {
+        addText(`Claim ${index + 1}:`, 14);
+        addText(`Policy: ${getPolicyName(claim.attributes.policy_id)}`, 12, 10);
+        addText(`Amount: ${claim.attributes.amount}`, 12, 10);
+        addText(`Status: ${claim.attributes.status}`, 12, 10);
+      });
+    }
 
     // Footer
     doc.setFontSize(10);
     doc.setTextColor(128);
-    doc.text('Generated by Parziwal27', 105, 290, {
-      align: 'center',
-    });
+    doc.text('Generated by Parziwal27', 105, 290, { align: 'center' });
 
     // Open PDF in a new tab
     window.open(doc.output('bloburl'), '_blank');
@@ -248,6 +257,7 @@ const GeneratePDF = () => {
       <Button
         variant="contained"
         onClick={generatePDF}
+        disabled={isLoading || !userData}
         sx={{
           backgroundColor: '#4CAF50',
           '&:hover': {
@@ -256,6 +266,12 @@ const GeneratePDF = () => {
         }}>
         Download PDF
       </Button>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
     </Container>
   );
 };

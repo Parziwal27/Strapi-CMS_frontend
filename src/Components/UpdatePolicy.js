@@ -56,22 +56,48 @@ const UpdatePolicy = () => {
 
   const fetchAllPolicies = async () => {
     const token = localStorage.getItem('jwt');
+    setIsLoading(true);
     try {
-      const response = await axios.get(
-        'https://strapi-cms-backend-wtzq.onrender.com/api/policies',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      let allPolicies = [];
+      let page = 1;
+      let hasMorePages = true;
+
+      while (hasMorePages) {
+        const response = await axios.get(
+          'https://strapi-cms-backend-wtzq.onrender.com/api/policies',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/json',
+            },
+            params: {
+              pagination: {
+                page: page,
+                pageSize: 100,
+              },
+            },
+          }
+        );
+
+        allPolicies = [...allPolicies, ...response.data.data];
+
+        if (response.data.meta.pagination.pageCount > page) {
+          page++;
+        } else {
+          hasMorePages = false;
         }
-      );
-      console.log('All policies response:', response.data);
-      setAllPolicies(response.data.data || []);
+      }
+
+      console.log('All policies response:', allPolicies);
+      setAllPolicies(allPolicies);
     } catch (error) {
       console.error('Error fetching all policies:', error);
       setError('Failed to fetch all policies. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
+
 
   const getAvailablePlans = (policyName) => {
     const matchingPolicies = allPolicies.filter(

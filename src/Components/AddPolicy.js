@@ -77,7 +77,7 @@ const AddPolicy = () => {
             params: {
               pagination: {
                 page: page,
-                pageSize: 100, // Adjust this value based on your API's maximum allowed page size
+                pageSize: 100,
               },
             },
           }
@@ -189,7 +189,7 @@ const AddPolicy = () => {
       alert(`Successfully added the policy: ${newPolicy.policy_name}`);
       setSelectedCategory(null);
       setSelectedPolicyId(null);
-      fetchUserPolicies(); // Refresh the user's policies
+      fetchUserPolicies();
     } catch (err) {
       console.error('Error updating policies:', err);
       setError(
@@ -247,9 +247,9 @@ const AddPolicy = () => {
           flexWrap="wrap"
           justifyContent="center"
           sx={{
-            maxHeight: 250, // Set a fixed height for the policies section
-            overflowY: 'auto', // Enable vertical scrolling
-            paddingRight: 2, // Optional: Add padding for better aesthetics
+            maxHeight: 250,
+            overflowY: 'auto',
+            paddingRight: 2,
           }}>
           {categories.map((category, index) => (
             <CategoryBox
