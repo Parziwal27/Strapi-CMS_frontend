@@ -54,7 +54,7 @@ const Login = ({ onLoginSuccess }) => {
   const fetchFields = async () => {
     try {
       const response = await axios.get(
-        'http://localhost:1337/api/login-fields'
+        'https://strapi-cms-backend-wtzq.onrender.com/api/login-fields'
       );
       const fetchedFields = response.data.fields;
       setFields(fetchedFields);
@@ -110,7 +110,7 @@ const Login = ({ onLoginSuccess }) => {
     try {
       // First, validate the user
       const validationResponse = await axios.post(
-        'http://localhost:1337/api/validate-user',
+        'https://strapi-cms-backend-wtzq.onrender.com/api/validate-user',
         formData
       );
 
@@ -120,7 +120,7 @@ const Login = ({ onLoginSuccess }) => {
       if (validationResponse.data.success) {
         try {
           const loginResponse = await axios.post(
-            'http://localhost:1337/api/auth/local',
+            'https://strapi-cms-backend-wtzq.onrender.com/api/auth/local',
             {
               identifier: formData.identifier,
               password: formData.password,
