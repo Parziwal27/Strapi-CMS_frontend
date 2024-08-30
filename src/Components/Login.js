@@ -13,6 +13,7 @@ import {
   Avatar,
   InputAdornment,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -31,12 +32,13 @@ const theme = createTheme({
   },
 });
 
-const Login = () => {
+const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fields, setFields] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,7 +54,7 @@ const Login = () => {
   const fetchFields = async () => {
     try {
       const response = await axios.get(
-        'https://strapi-cms-backend-wtzq.onrender.com/api/login-fields'
+        'http://localhost:1337/api/login-fields'
       );
       const fetchedFields = response.data.fields;
       setFields(fetchedFields);
@@ -103,41 +105,67 @@ const Login = () => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const response = await axios.post(
-        'https://strapi-cms-backend-wtzq.onrender.com/api/validate-user',
-        {
-          identifier: formData.identifier,
-          email: formData.email,
-          password: formData.password,
-        }
+      // First, validate the user
+      const validationResponse = await axios.post(
+        'http://localhost:1337/api/validate-user',
+        formData
       );
 
-      if (response.data.success) {
-        // If validation is successful, proceed with login
-        const loginResponse = await axios.post(
-          'https://strapi-cms-backend-wtzq.onrender.com/api/auth/local',
-          {
-            identifier: formData.identifier,
-            password: formData.password,
-          }
-        );
+      console.log('Validation response:', validationResponse.data);
 
-        console.log('Login successful:', loginResponse.data);
-        // Store the token or user data in local storage or state management
-        localStorage.setItem('token', loginResponse.data.jwt);
-        navigate('/dashboard'); // Navigate to dashboard or home page
+      // If validation is successful, proceed with login
+      if (validationResponse.data.success) {
+        try {
+          const loginResponse = await axios.post(
+            'http://localhost:1337/api/auth/local',
+            {
+              identifier: formData.identifier,
+              password: formData.password,
+            }
+          );
+
+          console.log('Login response:', loginResponse.data);
+
+          const { jwt, user } = loginResponse.data;
+          localStorage.setItem('jwt', jwt);
+          localStorage.setItem('username', formData.identifier);
+          if (onLoginSuccess) {
+            onLoginSuccess(user);
+          }
+          console.log('User isAdmin:', user.isAdmin);
+          navigate(user.isAdmin ? '/admin' : '/user');
+        } catch (loginError) {
+          console.error('Login error:', loginError);
+          if (loginError.response) {
+            console.error('Login error response:', loginError.response.data);
+            setErrorMessage(
+              loginError.response.data.error?.message ||
+                'Login failed. Please try again.'
+            );
+          } else {
+            setErrorMessage(
+              'An error occurred during login. Please try again.'
+            );
+          }
+        }
       } else {
-        // This else block is not necessary as the backend always throws an error for unsuccessful validations
         setErrorMessage('Invalid credentials');
       }
     } catch (err) {
-      console.error('Login error:', err);
-      if (err.response && err.response.data && err.response.data.error) {
-        setErrorMessage(err.response.data.error);
+      console.error('Validation error:', err);
+      if (err.response) {
+        console.error('Validation error response:', err.response.data);
+        setErrorMessage(
+          err.response.data.error || 'An error occurred during login'
+        );
       } else {
         setErrorMessage('An error occurred during login');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -206,7 +234,8 @@ const Login = () => {
                               <IconButton
                                 aria-label="toggle password visibility"
                                 onClick={() => setShowPassword(!showPassword)}
-                                edge="end">
+                                edge="end"
+                                disabled={isLoading}>
                                 {showPassword ? (
                                   <VisibilityOffIcon />
                                 ) : (
@@ -218,14 +247,20 @@ const Login = () => {
                         }
                       : undefined
                   }
+                  disabled={isLoading}
                 />
               ))}
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem' }}>
-                Login
+                sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem' }}
+                disabled={isLoading}>
+                {isLoading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Login'
+                )}
               </Button>
               {errorMessage && (
                 <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
