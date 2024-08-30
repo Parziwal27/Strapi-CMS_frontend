@@ -36,6 +36,7 @@ const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fields, setFields] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,9 +48,20 @@ const Login = ({ onLoginSuccess }) => {
     // Display message if redirected from registration
     const message = location.state?.message;
     if (message) {
-      setErrorMessage(message);
+      setSuccessMessage(message);
     }
   }, [location]);
+
+  useEffect(() => {
+    let timer;
+    if (errorMessage || successMessage) {
+      timer = setTimeout(() => {
+        setErrorMessage('');
+        setSuccessMessage('');
+      }, 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [errorMessage, successMessage]);
 
   const fetchFields = async () => {
     try {
@@ -99,6 +111,7 @@ const Login = ({ onLoginSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
 
     if (!validateForm()) {
       setErrorMessage('Please fill in all required fields.');
@@ -265,6 +278,11 @@ const Login = ({ onLoginSuccess }) => {
               {errorMessage && (
                 <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
                   {errorMessage}
+                </Alert>
+              )}
+              {successMessage && (
+                <Alert severity="success" sx={{ mt: 2, width: '100%' }}>
+                  {successMessage}
                 </Alert>
               )}
               <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>

@@ -35,6 +35,7 @@ const Register = () => {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [fields, setFields] = useState([]);
   const navigate = useNavigate();
@@ -42,6 +43,17 @@ const Register = () => {
   useEffect(() => {
     fetchFields();
   }, []);
+
+  useEffect(() => {
+    let timer;
+    if (errorMessage || successMessage) {
+      timer = setTimeout(() => {
+        setErrorMessage('');
+        setSuccessMessage('');
+      }, 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [errorMessage, successMessage]);
 
   const fetchFields = async () => {
     try {
@@ -100,6 +112,7 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
 
     if (!validateForm()) {
       setErrorMessage('Please fill in all required fields correctly.');
@@ -128,9 +141,12 @@ const Register = () => {
       );
 
       console.log('Registration successful:', response.data);
-      navigate('/login', {
-        state: { message: 'Registration successful. Please log in.' },
-      });
+      setSuccessMessage('Registration successful. Please log in.');
+      setTimeout(() => {
+        navigate('/login', {
+          state: { message: 'Registration successful. Please log in.' },
+        });
+      }, 3000);
     } catch (err) {
       console.error('Registration error:', err);
       setErrorMessage(
@@ -229,6 +245,11 @@ const Register = () => {
               {errorMessage && (
                 <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
                   {errorMessage}
+                </Alert>
+              )}
+              {successMessage && (
+                <Alert severity="success" sx={{ mt: 2, width: '100%' }}>
+                  {successMessage}
                 </Alert>
               )}
               <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
