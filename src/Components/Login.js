@@ -135,7 +135,7 @@ const Login = ({ onLoginSuccess }) => {
           const loginResponse = await axios.post(
             'https://strapi-cms-backend-wtzq.onrender.com/api/auth/local',
             {
-              username: formData.username,
+              identifier: formData.identifier,
               password: formData.password,
             }
           );
@@ -144,7 +144,7 @@ const Login = ({ onLoginSuccess }) => {
 
           const { jwt, user } = loginResponse.data;
           localStorage.setItem('jwt', jwt);
-          localStorage.setItem('username', formData.username);
+          localStorage.setItem('username', formData.identifier);
           if (onLoginSuccess) {
             onLoginSuccess(user);
           }
