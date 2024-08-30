@@ -130,9 +130,9 @@ const GeneratePDF = () => {
     const doc = new jsPDF();
     let yOffset = 20;
 
-    const addText = (text, fontSize = 12, indent = 0) => {
+    const addKeyValuePair = (key, value, fontSize = 12, indent = 0) => {
       doc.setFontSize(fontSize);
-      doc.text(text, 20 + indent, yOffset);
+      doc.text(`${key}: ${value}`, 20 + indent, yOffset);
       yOffset += fontSize / 2 + 5;
       if (yOffset > 270) {
         doc.addPage();
@@ -145,8 +145,9 @@ const GeneratePDF = () => {
       doc.setFillColor(200, 220, 255);
       doc.rect(15, yOffset - 5, 180, 10, 'F');
       doc.setTextColor(0, 0, 0);
-      addText(title, 14);
-      yOffset += 5;
+      doc.setFontSize(14);
+      doc.text(title, 20, yOffset);
+      yOffset += 10;
     };
 
     // Add heading
@@ -155,25 +156,31 @@ const GeneratePDF = () => {
     doc.text('Claims Management System', 105, yOffset, { align: 'center' });
     yOffset += 20;
 
-    // Profile Section (Always included)
+    // Profile Section
     addSection('User Profile');
-    addText(`Username: ${userData.username}`);
-    addText(`Email: ${userData.email}`);
-    addText(`Provider: ${userData.provider || 'N/A'}`);
-    addText(`Created At: ${new Date(userData.createdAt).toLocaleString()}`);
-    addText(`Updated At: ${new Date(userData.updatedAt).toLocaleString()}`);
+    addKeyValuePair('Username', userData.username);
+    addKeyValuePair('Email', userData.email);
+    addKeyValuePair('Provider', userData.provider || 'N/A');
+    addKeyValuePair(
+      'Created At',
+      new Date(userData.createdAt).toLocaleString()
+    );
+    addKeyValuePair(
+      'Updated At',
+      new Date(userData.updatedAt).toLocaleString()
+    );
     yOffset += 10;
 
     // Policies Section
     addSection('Current Policies');
     if (userPolicies.length === 0) {
-      addText('No policies found for this user.');
+      addKeyValuePair('Info', 'No policies found for this user.');
     } else {
       userPolicies.forEach((policy, index) => {
-        addText(`Policy ${index + 1}: ${policy.policy_name}`, 14);
-        addText(`Sum Assured: ${policy.sum_assured}`, 12, 10);
-        addText(`Premium: ${policy.premium}`, 12, 10);
-        addText(`Duration: ${policy.duration}`, 12, 10);
+        addKeyValuePair(`Policy ${index + 1}`, policy.policy_name, 14);
+        addKeyValuePair('Sum Assured', policy.sum_assured, 12, 10);
+        addKeyValuePair('Premium', policy.premium, 12, 10);
+        addKeyValuePair('Duration', policy.duration, 12, 10);
       });
     }
     yOffset += 10;
@@ -184,7 +191,7 @@ const GeneratePDF = () => {
       (claim) => claim.attributes.policyholder_id === userData.username
     );
     if (filteredClaims.length === 0) {
-      addText('No claims found for this user.');
+      addKeyValuePair('Info', 'No claims found for this user.');
     } else {
       const sortedClaims = filteredClaims.sort((a, b) => {
         if (
@@ -211,10 +218,15 @@ const GeneratePDF = () => {
       });
 
       sortedClaims.forEach((claim, index) => {
-        addText(`Claim ${index + 1}:`, 14);
-        addText(`Policy: ${getPolicyName(claim.attributes.policy_id)}`, 12, 10);
-        addText(`Amount: ${claim.attributes.amount}`, 12, 10);
-        addText(`Status: ${claim.attributes.status}`, 12, 10);
+        addKeyValuePair(`Claim ${index + 1}`, '', 14);
+        addKeyValuePair(
+          'Policy',
+          getPolicyName(claim.attributes.policy_id),
+          12,
+          10
+        );
+        addKeyValuePair('Amount', claim.attributes.amount, 12, 10);
+        addKeyValuePair('Status', claim.attributes.status, 12, 10);
       });
     }
 
